@@ -2,6 +2,10 @@
 
 基于 Three.js 的地球自转知识点交互演示应用：自转方向、自转周期、自转速度、昼夜更替、地方时/时区/区时、地转偏向力六大知识点，含 14 道针对性练习题。
 
+## 在线访问
+
+**https://wanlikeys.github.io/earth-rotation-3d/**
+
 ## 运行方式
 
 项目需通过 HTTP 服务器访问（`fetch` 加载 GeoJSON 受浏览器跨域限制，直接双击打开 `index.html` 无效）：
