@@ -1,0 +1,383 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>地球自转交互式演示</title>
+  <link rel="icon" type="image/svg+xml" href="./images/favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;800&family=Noto+Sans+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./style.css">
+  <link rel="stylesheet" href="../_shared/responsive-shell.css?v=6" />
+</head>
+<body>
+  <div class="app" id="app">
+    <div class="panel-column" id="panelColumn">
+    <aside class="panel">
+        <div id="panelBody" class="panel-body">
+        <header class="panel-header">
+          <h1 class="panel-title">地球自转<span class="panel-title-mark">3D</span>交互式演示</h1>
+        </header>
+      <section class="control-group">
+        <div class="section-label">选择知识点</div>
+        <select id="mode" class="panel-select">
+          <option value="direction">自转方向</option>
+          <option value="period">自转周期</option>
+          <option value="speed">自转速度</option>
+          <option value="daynight">昼夜更替</option>
+          <option value="timezone">地方时、时区和区时</option>
+          <option value="coriolis">地转偏向力</option>
+        </select>
+      </section>
+
+      <section class="control-group">
+        <div class="slider-row slider-row-playback">
+          <button id="playPause" class="play-pause-btn" aria-label="播放/暂停" title="播放/暂停">⏸</button>
+          <span class="slider-label">速度</span>
+          <input id="speed" type="range" min="0" max="100" value="10" aria-label="速度">
+          <span class="slider-val"><span id="speedValue">10</span>x</span>
+        </div>
+      </section>
+
+      <section class="control-group">
+        <div class="slider-row slider-row-date">
+          <div class="slider-row-date-header">
+            <span class="slider-label">日期</span>
+            <span class="slider-val" id="simulationDateValue">06-22（第173天）</span>
+          </div>
+          <div class="slider-row-date-slider-wrap">
+            <div class="date-slider-track">
+              <input id="simulationDate" type="range" min="1" max="365" value="173" aria-label="模拟日期">
+              <div class="date-season-markers" role="group" aria-label="二分二至日标记">
+                <button type="button" class="date-season-dot" data-day="80" data-name="春分" title="春分 · 3月21日" aria-label="春分 3月21日" style="left: calc((80 - 1) / 364 * 100%)"></button>
+                <button type="button" class="date-season-dot date-season-dot-active" data-day="173" data-name="夏至" title="夏至 · 6月22日" aria-label="夏至 6月22日" aria-pressed="true" style="left: calc((173 - 1) / 364 * 100%)"></button>
+                <button type="button" class="date-season-dot" data-day="266" data-name="秋分" title="秋分 · 9月23日" aria-label="秋分 9月23日" style="left: calc((266 - 1) / 364 * 100%)"></button>
+                <button type="button" class="date-season-dot" data-day="356" data-name="冬至" title="冬至 · 12月22日" aria-label="冬至 12月22日" style="left: calc((356 - 1) / 364 * 100%)"></button>
+              </div>
+            </div>
+            <button type="button" id="simulationDatePickerBtn" class="date-picker-btn" title="选择日期" aria-label="选择日期">
+              <svg class="date-picker-icon" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false">
+                <rect x="3" y="5" width="18" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"/>
+                <path d="M3 9h18M8 3v4M16 3v4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+              </svg>
+            </button>
+            <input id="simulationDatePicker" type="date" class="date-picker-native" tabindex="-1" aria-hidden="true">
+          </div>
+        </div>
+        <div class="season-presets" role="group" aria-label="二分二至日期预设">
+          <button type="button" class="preset-season-btn" data-day="80" title="3月21日" aria-pressed="false">春分</button>
+          <button type="button" class="preset-season-btn preset-season-active" data-day="173" title="6月22日" aria-pressed="true">夏至</button>
+          <button type="button" class="preset-season-btn" data-day="266" title="9月23日" aria-pressed="false">秋分</button>
+          <button type="button" class="preset-season-btn" data-day="356" title="12月22日" aria-pressed="false">冬至</button>
+        </div>
+      </section>
+
+      <section class="control-group row-views-grid" aria-label="预设观察视角">
+        <button type="button" id="southPoleViewBtn" class="view-preset-btn" aria-pressed="false">南极俯视图</button>
+        <button type="button" id="northPoleViewBtn" class="view-preset-btn" aria-pressed="false">北极俯视图</button>
+        <button type="button" id="sideViewBtn" class="view-preset-btn view-preset-active" aria-pressed="true">侧视图</button>
+        <button type="button" id="unwrappedMapViewBtn" class="view-preset-btn" aria-pressed="false">球面展开图</button>
+      </section>
+
+      <section class="control-group control-group-layers">
+        <div class="section-label">可视化图层（载入过程可能有延时）</div>
+        <div class="layer-earth-skin">
+          <select id="earthSkin" class="panel-select" aria-label="地球贴图" title="地球贴图">
+            <option value="satellite">卫星影像图</option>
+            <option value="pretty" selected>分层设色地形图（默认）</option>
+            <option value="political">政区图（主要国家）</option>
+            <option value="blank">空白底图</option>
+          </select>
+        </div>
+        <div id="coriolisMotionDirWrap" class="layer-coriolis-motion-row slider-row" hidden>
+          <span class="slider-label">水平运动方向</span>
+          <select id="coriolisMotionDir" class="panel-select panel-select-inline" title="示意水平运动方向" aria-label="水平运动方向">
+            <option value="north" selected>北</option>
+            <option value="south">南</option>
+            <option value="east">东</option>
+            <option value="west">西</option>
+          </select>
+        </div>
+        <div id="targetLatWrap" class="target-lat-row-wrap slider-row" hidden>
+            <span class="slider-label">偏转演示纬度</span>
+            <input id="targetLat" class="target-lat-range" type="range" min="-80" max="80" value="25">
+            <span class="slider-val" id="targetLatValue">25°N</span>
+        </div>
+        <div class="layer-checkboxes">
+          <label><input id="showSunRays" type="checkbox" checked> 太阳光线</label>
+          <label><input id="showTerminator" type="checkbox" checked> 晨昏圈</label>
+          <div class="layer-check-meridian-row">
+            <label class="layer-check-meridian-cb"><input id="showDayNightArc" type="checkbox"> 昼弧-夜弧</label>
+            <label class="meridian-count-wrap" id="dayNightArcLatWrap" hidden>
+              <input
+                id="dayNightArcLatInput"
+                class="interior-opacity-input day-night-arc-lat-input"
+                type="number"
+                min="0"
+                max="90"
+                step="0.1"
+                value="50"
+                inputmode="decimal"
+                title="纬度数值（0~90）"
+                aria-label="纬度数值"
+              >
+              <span class="day-night-arc-deg">°</span>
+              <select id="dayNightArcHemisphere" class="panel-select panel-select-compact day-night-arc-hemi-select" title="北纬/南纬" aria-label="北纬或南纬">
+                <option value="N" selected>N</option>
+                <option value="S">S</option>
+              </select>
+            </label>
+          </div>
+          <div class="layer-check-meridian-row">
+            <label class="layer-check-meridian-cb"><input id="showMeridians" type="checkbox"> 经线</label>
+            <label class="meridian-count-wrap" id="meridianCountWrap" hidden>
+              <span class="meridian-count-label">条数</span>
+              <select id="meridianCountSelect" class="panel-select panel-select-compact" title="经线条数（均匀分布）" aria-label="经线条数">
+                <option value="2">2</option>
+                <option value="4">4</option>
+                <option value="8" selected>8</option>
+                <option value="16">16</option>
+                <option value="24">24</option>
+              </select>
+            </label>
+          </div>
+          <label><input id="showLatitudes" type="checkbox"> 纬线</label>
+          <label id="showEquatorMountainWrap" hidden><input id="showEquatorMountain" type="checkbox"> 山体示意</label>
+          <label><input id="showTimeZones" type="checkbox"> 时区与区时</label>
+          <label id="showDateLineWrap" hidden><input id="showDateLine" type="checkbox"> 日界线</label>
+          <label><input id="showLocalTimeHours" type="checkbox"> 地方时</label>
+          <label><input id="showRotationDir" type="checkbox"> 自转方向</label>
+          <label><input id="showTropics" type="checkbox" checked> 回归线</label>
+          <label><input id="showPolarCircles" type="checkbox" checked> 南北极圈</label>
+          <label><input id="showPoles" type="checkbox" checked> 南北极点</label>
+          <label><input id="showTiltedAxis" type="checkbox" checked> 倾斜地轴</label>
+          <label><input id="showPolaris" type="checkbox"> 北极星</label>
+          <label><input id="showClouds" type="checkbox"> 云层</label>
+          <div class="layer-check-meridian-row layer-check-interior-row">
+            <label class="layer-check-meridian-cb"><input id="showInteriorTransparent" type="checkbox"> 内部透明</label>
+            <label class="interior-opacity-wrap" id="interiorOpacityWrap" hidden>
+              <input
+                id="interiorOpacityInput"
+                class="interior-opacity-input"
+                type="number"
+                min="0"
+                max="100"
+                step="1"
+                value="50"
+                inputmode="numeric"
+                title="透明度（0~100%）"
+                aria-label="透明度百分比"
+              >
+              <span class="interior-opacity-unit">%</span>
+            </label>
+          </div>
+          <div class="layer-check-ref-header">
+            <label class="ref-point-check-label"><input id="showRefPoints" type="checkbox"> 参照点</label>
+            <button type="button" id="addRefPointBtn" class="ref-point-add-btn" hidden title="增加参照点">+</button>
+          </div>
+          <div class="ref-point-block">
+            <div id="presetCitiesBlock" class="preset-cities-block" hidden>
+              <div class="preset-cities-title">世界主要城市（预设）</div>
+              <div class="preset-cities-checkboxes">
+                <label><input id="city-beijing" data-city-key="beijing" type="checkbox"> 北京</label>
+                <label><input id="city-shanghai" data-city-key="shanghai" type="checkbox"> 上海</label>
+                <label><input id="city-lhasa" data-city-key="lhasa" type="checkbox"> 拉萨</label>
+                <label><input id="city-hongkong" data-city-key="hongkong" type="checkbox"> 香港</label>
+                <label><input id="city-london" data-city-key="london" type="checkbox"> 伦敦</label>
+                <label><input id="city-moscow" data-city-key="moscow" type="checkbox"> 莫斯科</label>
+                <label><input id="city-paris" data-city-key="paris" type="checkbox"> 巴黎</label>
+                <label><input id="city-cairo" data-city-key="cairo" type="checkbox"> 开罗</label>
+                <label><input id="city-newyork" data-city-key="newyork" type="checkbox"> 纽约</label>
+                <label><input id="city-losangeles" data-city-key="losangeles" type="checkbox"> 洛杉矶</label>
+                <label><input id="city-rio" data-city-key="rio" type="checkbox"> 里约热内卢</label>
+                <label><input id="city-capetown" data-city-key="capetown" type="checkbox"> 开普敦</label>
+              </div>
+            </div>
+            <div id="refPointList" class="ref-point-list" hidden></div>
+          </div>
+        </div>
+      </section>
+        </div>
+      <footer class="copyright-entry">
+        <button type="button" id="practiceBtn" class="copyright-text-btn">针对性练习</button>
+      </footer>
+    </aside>
+    <button
+      type="button"
+      id="panelToggleBtn"
+      class="panel-toggle-btn"
+      aria-expanded="true"
+      aria-controls="panelBody"
+      aria-label="收起参数面板"
+      title="收起/展开参数"
+    >◀</button>
+    </div>
+
+    <main class="stage-wrap">
+      <div class="stage-cosmic-bg" aria-hidden="true"></div>
+      <div class="cosmic-backdrop" id="cosmicBackdrop" aria-hidden="true">
+        <div class="cosmic-backdrop-stars">
+          <canvas id="cosmicStarfield"></canvas>
+        </div>
+        <div class="hero-nebula-photo cosmic-backdrop-nebula">
+          <img src="./images/hero/nebula.jpg" alt="">
+        </div>
+      </div>
+      <div class="stage-noise-overlay" aria-hidden="true"></div>
+      <div id="stage">
+        <div id="unwrappedMapView" class="unwrapped-map-view" hidden>
+          <canvas id="unwrappedMapCanvas" aria-label="球面展开图"></canvas>
+        </div>
+      </div>
+      <div id="quizPanel" class="quiz-panel" hidden>
+        <header class="quiz-header">
+          <button type="button" id="quizBackBtn" class="quiz-back-btn">返回演示</button>
+          <div class="quiz-header-main">
+            <div class="quiz-kicker">针对性练习</div>
+            <div class="quiz-progress" id="quizProgress">第 1 / 14 题</div>
+          </div>
+        </header>
+        <div id="quizBody" class="quiz-body"></div>
+        <div id="quizActions" class="quiz-actions">
+          <button type="button" id="quizSubmitBtn" class="quiz-action-btn" disabled>提交答案</button>
+          <button type="button" id="quizNextBtn" class="quiz-action-btn quiz-next-btn" hidden>下一题</button>
+        </div>
+      </div>
+      <div id="meridianLabels" class="meridian-labels"></div>
+      <div id="latitudeLabels" class="meridian-labels"></div>
+      <div id="equatorMountainLabels" class="meridian-labels"></div>
+      <div id="rotationLabels" class="meridian-labels"></div>
+      <div id="poleLabels" class="meridian-labels"></div>
+      <div id="earthCenterLabels" class="meridian-labels"></div>
+      <div id="polarisLabels" class="meridian-labels"></div>
+      <div id="refPointLabels" class="meridian-labels"></div>
+      <div id="cityRefPointLabels" class="meridian-labels"></div>
+      <div id="localTimeLabels" class="meridian-labels"></div>
+      <div id="timeZoneLabels" class="meridian-labels"></div>
+      <div id="dateLineLabels" class="meridian-labels"></div>
+      <div id="terminatorPLabels" class="meridian-labels"></div>
+      <button type="button" id="stageResetViewBtn" class="stage-tool-btn stage-reset-btn" aria-label="重置视角" title="重置视角">⟲</button>
+      <button type="button" id="fullscreenToggleBtn" class="stage-tool-btn stage-fullscreen-btn" aria-label="全屏显示">全屏显示</button>
+      <div class="stage-movement-controls">
+        <div class="movement-controls">
+          <div class="movement-row">
+            <button id="moveUp">↑</button>
+          </div>
+          <div class="movement-row">
+            <button id="moveLeft">←</button>
+            <button id="moveDown">↓</button>
+            <button id="moveRight">→</button>
+          </div>
+        </div>
+      </div>
+      <div id="compareViewPanel" class="collapsible-box stage-panel-card stage-compare-view" aria-label="对比视角">
+        <div class="collapsible-head">
+          <span class="collapsible-head-title">对比视角</span>
+          <select id="compareViewSelect" class="panel-select compare-view-select" aria-label="选择对比演示视角"></select>
+          <button type="button" class="collapsible-head-btn" aria-expanded="true" aria-label="收起" title="收起/展开">▼</button>
+        </div>
+        <div class="collapsible-content">
+          <div id="compareViewport" class="compare-viewport">
+            <canvas id="compareUnwrappedCanvas" class="compare-unwrapped-canvas" hidden aria-label="对比球面展开图"></canvas>
+          </div>
+        </div>
+        <div class="compare-resize-handle compare-resize-n" data-compare-resize="n" aria-hidden="true"></div>
+        <div class="compare-resize-handle compare-resize-e" data-compare-resize="e" aria-hidden="true"></div>
+        <div class="compare-resize-handle compare-resize-ne" data-compare-resize="ne" aria-hidden="true"></div>
+      </div>
+      <div class="stage-text-stack">
+        <div id="knowledgeExplainPanel" class="knowledge-explain-panel knowledge-box collapsible-box collapsed stage-panel-card">
+          <div class="collapsible-head">
+            <span class="collapsible-head-title">知识点解读</span>
+            <button type="button" class="collapsible-head-btn" aria-expanded="false" aria-label="展开" title="收起/展开">▶</button>
+          </div>
+          <div class="collapsible-content">
+            <p id="explainText" class="knowledge-explain-body"></p>
+          </div>
+        </div>
+      </div>
+      <div class="stage-corner-stack">
+        <div class="stage-gesture-dock" aria-label="手势与语音控制">
+          <div id="gesturePreviewWrap" class="gesture-preview-wrap" hidden aria-hidden="true">
+            <video id="gestureVideo" class="gesture-preview-video" playsinline muted autoplay></video>
+            <canvas id="gestureOverlay" class="gesture-preview-overlay"></canvas>
+          </div>
+          <div class="stage-gesture-checks">
+            <label class="stage-gesture-check" for="gestureControl">
+              <input id="gestureControl" type="checkbox">
+              <span>手势控制</span>
+            </label>
+            <label class="stage-gesture-check" for="voiceControl">
+              <input id="voiceControl" type="checkbox">
+              <span>语音控制</span>
+            </label>
+          </div>
+          <p id="gestureStatus" class="gesture-status" hidden></p>
+          <p id="voiceStatus" class="gesture-status" hidden></p>
+          <p id="voiceHelp" class="voice-help" hidden>
+            向左/向右/向上/向下 · 放大/缩小 · 全屏显示/退出全屏 · 重置
+          </p>
+        </div>
+        <div id="liveDataPanel" class="info-card knowledge-box collapsible-box stage-live-data stage-panel-card">
+          <div class="collapsible-head">
+            <span class="collapsible-head-title">实时数据</span>
+            <button type="button" class="collapsible-head-btn" aria-expanded="true" aria-label="收起" title="收起/展开">▼</button>
+          </div>
+          <div class="collapsible-content">
+            <ul>
+              <li>UTC 时间：<span id="utcTime">--:--:--</span></li>
+              <li>太阳直射经线：<span id="solarMeridian">0°</span></li>
+              <li>太阳直射纬线：<span id="solarLatitude">0°</span></li>
+              <li id="terminatorPLatRow" hidden>晨昏圈P点纬度：<span id="terminatorPLatitude">--</span></li>
+              <li>偏转方向：<span id="coriolisDirection">-</span></li>
+              <li id="refPointTimesWrap" class="ref-point-times-wrap" hidden>
+                <div class="ref-point-times-label">参照点地方时</div>
+                <ul id="refPointTimesList" class="ref-point-times-nested"></ul>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div id="stageHint" class="hint hint-bar" hidden></div>
+      </div>
+    </main>
+  </div>
+
+  <div id="refPointModal" class="modal-overlay" hidden>
+    <div class="modal-dialog ref-point-modal" role="dialog" aria-modal="true" aria-labelledby="refPointModalTitle">
+      <h3 id="refPointModalTitle" class="modal-title">参照点设置</h3>
+      <div class="modal-field">
+        <label for="refPointModalName">名称</label>
+        <input type="text" id="refPointModalName" class="modal-input" maxlength="40" placeholder="输入名称" autocomplete="off">
+      </div>
+      <div class="modal-field">
+        <label for="refPointModalLon">经度 <span id="refPointModalLonVal" class="modal-range-val">0</span>°（东经为正）</label>
+        <input type="range" id="refPointModalLon" min="-180" max="180" step="1" value="0">
+      </div>
+      <div class="modal-field">
+        <label for="refPointModalLat">纬度 <span id="refPointModalLatVal" class="modal-range-val">0</span>°（北纬为正）</label>
+        <input type="range" id="refPointModalLat" min="-90" max="90" step="1" value="0">
+      </div>
+      <div class="modal-actions">
+        <button type="button" id="refPointModalSave" class="modal-btn modal-btn-primary">确定</button>
+        <button type="button" id="refPointModalCancel" class="modal-btn">取消</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="quizZoomOverlay" class="quiz-zoom-overlay" hidden>
+    <img id="quizZoomImg" alt="题目附图放大">
+    <span class="quiz-zoom-hint">点击任意处关闭</span>
+  </div>
+
+  <script src="./libs/three.min.js"></script>
+  <script src="./libs/OrbitControls.js"></script>
+  <script src="./gesture-control.js"></script>
+  <script src="./voice-control.js"></script>
+  <script src="./cosmic-starfield.js"></script>
+  <script src="./main.js?v=coriolis-fix-2"></script>
+  <script src="./quiz-data.js"></script>
+  <script src="./quiz.js"></script>
+  <script src="../_shared/responsive-shell.js?v=6"></script>
+</body>
+</html>
